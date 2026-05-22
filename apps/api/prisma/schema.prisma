@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PublishStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum AssetVisibility {
+  PRIVATE
+  CAMPUS
+  PUBLIC
+}
+
+model Campus {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  users       User[]
+  authors     Author[]
+  categories  Category[]
+  books       Book[]
+  blogPosts   BlogPost[]
+  submissions Submission[]
+  mediaAssets MediaAsset[]
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  fullName     String
+  roleId       String
+  role         Role         @relation(fields: [roleId], references: [id])
+  campusId     String?
+  campus       Campus?      @relation(fields: [campusId], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  sessions     Session[]
+  auditLogs    AuditLog[]
+  submissions  Submission[]
+
+  @@index([campusId])
+}
+
+model Role {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  status     String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([action, createdAt])
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+}
+
+model Author {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  biography   String?
+  biographyId String?
+  biographyEn String?
+  avatarUrl   String?
+  campusId    String?
+  campus      Campus?      @relation(fields: [campusId], references: [id])
+  seoMeta     SeoMeta?
+  books       BookAuthor[]
+  blogPosts   BlogPost[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([campusId])
+}
+
+model Category {
+  id            String     @id @default(cuid())
+  name          String
+  slug          String     @unique
+  seoTitle      String?
+  nameId        String?
+  nameEn        String?
+  descriptionId String?
+  descriptionEn String?
+  parentId      String?
+  parent        Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children      Category[] @relation("CategoryHierarchy")
+  campusId      String?
+  campus        Campus?    @relation(fields: [campusId], references: [id])
+  seoMeta       SeoMeta?
+  books         Book[]
+  blogPosts     BlogPost[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([campusId])
+}
+
+model Book {
+  id           String         @id @default(cuid())
+  title        String
+  slug         String         @unique
+  summary      String
+  titleId      String?
+  titleEn      String?
+  summaryId    String?
+  summaryEn    String?
+  categoryId   String
+  category     Category       @relation(fields: [categoryId], references: [id])
+  publications Publication[]
+  authors      BookAuthor[]
+  files        BookFile[]
+  blogPosts    BlogPostBook[]
+  seoMeta      SeoMeta?
+  campusId     String?
+  campus       Campus?        @relation(fields: [campusId], references: [id])
+  submissions  Submission[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([categoryId, createdAt])
+  @@index([campusId])
+}
+
+model Publication {
+  id              String        @id @default(cuid())
+  bookId          String
+  book            Book          @relation(fields: [bookId], references: [id])
+  editionLabel    String?
+  isbn            String?
+  publicationDate DateTime?
+  pages           Int?
+  dimensions      String?
+  status          PublishStatus @default(DRAFT)
+  isPublic        Boolean       @default(false)
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([bookId, status])
+  @@index([status, publishedAt])
+}
+
+model BookAuthor {
+  bookId   String
+  authorId String
+  book     Book   @relation(fields: [bookId], references: [id])
+  author   Author @relation(fields: [authorId], references: [id])
+
+  @@id([bookId, authorId])
+}
+
+model BookFile {
+  id         String          @id @default(cuid())
+  bookId     String
+  book       Book            @relation(fields: [bookId], references: [id])
+  fileType   String
+  assetId    String
+  asset      MediaAsset      @relation(fields: [assetId], references: [id])
+  visibility AssetVisibility @default(PRIVATE)
+  isPreview  Boolean         @default(false)
+  locale     String?
+  createdAt  DateTime        @default(now())
+
+  @@index([bookId, fileType])
+  @@index([bookId, visibility, isPreview])
+}
+
+model BlogCategory {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  posts     BlogPost[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model BlogPost {
+  id             String         @id @default(cuid())
+  title          String
+  titleId        String?
+  titleEn        String?
+  slug           String         @unique
+  excerpt        String?
+  excerptId      String?
+  excerptEn      String?
+  content        String
+  categoryId     String?
+  category       BlogCategory?  @relation(fields: [categoryId], references: [id])
+  bookCategoryId String?
+  bookCategory   Category?      @relation(fields: [bookCategoryId], references: [id])
+  status         PublishStatus  @default(DRAFT)
+  authorName     String
+  authorId       String?
+  author         Author?        @relation(fields: [authorId], references: [id])
+  campusId       String?
+  campus         Campus?        @relation(fields: [campusId], references: [id])
+  books          BlogPostBook[]
+  seoMeta        SeoMeta?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([status, createdAt])
+  @@index([campusId])
+}
+
+model BlogPostBook {
+  blogPostId String
+  bookId     String
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id])
+  book       Book     @relation(fields: [bookId], references: [id])
+
+  @@id([blogPostId, bookId])
+}
+
+model MediaAsset {
+  id                String          @id @default(cuid())
+  fileName          String
+  mimeType          String
+  storageKey        String          @unique
+  publicUrl         String
+  visibility        AssetVisibility @default(PRIVATE)
+  malwareScanStatus String          @default("pending")
+  malwareScannedAt  DateTime?
+  sizeBytes         Int
+  campusId          String?
+  campus            Campus?         @relation(fields: [campusId], references: [id])
+  createdAt         DateTime        @default(now())
+  bookFiles         BookFile[]
+
+  @@index([visibility, createdAt])
+  @@index([campusId])
+}
+
+model SeoMeta {
+  id              String    @id @default(cuid())
+  metaTitle       String
+  metaDescription String
+  canonicalUrl    String?
+  ogImageUrl      String?
+  bookId          String?   @unique
+  blogPostId      String?   @unique
+  authorId        String?   @unique
+  categoryId      String?   @unique
+  book            Book?     @relation(fields: [bookId], references: [id])
+  blogPost        BlogPost? @relation(fields: [blogPostId], references: [id])
+  author          Author?   @relation(fields: [authorId], references: [id])
+  category        Category? @relation(fields: [categoryId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Submission {
+  id                String           @id @default(cuid())
+  submittedByUserId String
+  submittedByUser   User             @relation(fields: [submittedByUserId], references: [id])
+  title             String
+  titleId           String?
+  titleEn           String?
+  description       String?
+  descriptionId     String?
+  descriptionEn     String?
+  status            SubmissionStatus @default(DRAFT)
+  reviewerNotes     String?
+  reviewedByUserId  String?
+  reviewedAt        DateTime?
+  bookId            String?
+  book              Book?            @relation(fields: [bookId], references: [id])
+  campusId          String?
+  campus            Campus?          @relation(fields: [campusId], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([submittedByUserId, status])
+  @@index([status, createdAt])
+  @@index([campusId])
+}

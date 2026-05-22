@@ -1,0 +1,31 @@
+{
+  "name": "publisher-for-campuss",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.10.0",
+  "scripts": {
+    "app:up": "bash ./scripts/app-up.sh",
+    "dev": "corepack pnpm -r --parallel --filter './apps/*' run dev",
+    "build": "corepack pnpm -r --if-present run build",
+    "lint": "corepack pnpm -r --if-present run lint",
+    "typecheck": "corepack pnpm -r --if-present run typecheck",
+    "test": "corepack pnpm -r --if-present run test",
+    "test:e2e": "corepack pnpm -r --if-present run test:e2e",
+    "prisma:generate": "corepack pnpm --filter @publisher/api run prisma:generate",
+    "prisma:migrate": "corepack pnpm --filter @publisher/api run prisma:migrate",
+    "prisma:deploy": "corepack pnpm --filter @publisher/api run prisma:deploy",
+    "prisma:seed": "corepack pnpm --filter @publisher/api run prisma:seed",
+    "seed:check": "bash ./scripts/seed-check.sh",
+    "release:check": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm test:e2e && corepack pnpm build",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^8.57.0",
+    "eslint": "^8.57.0",
+    "globals": "^15.15.0",
+    "prettier": "^3.3.3",
+    "turbo": "^2.1.3",
+    "typescript-eslint": "^8.32.0",
+    "typescript": "^5.6.3"
+  }
+}

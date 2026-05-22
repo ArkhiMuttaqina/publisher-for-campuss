@@ -1,0 +1,49 @@
+{
+  "name": "@publisher/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "nest start --watch",
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:e2e": "vitest run test/health.e2e-spec.ts",
+    "prisma:generate": "node scripts/run-prisma.mjs generate",
+    "prisma:migrate": "node scripts/run-prisma.mjs migrate dev",
+    "prisma:deploy": "node scripts/run-prisma.mjs migrate deploy",
+    "prisma:seed": "node scripts/run-prisma.mjs db seed"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.2",
+    "@nestjs/config": "^3.2.3",
+    "@nestjs/core": "^10.4.2",
+    "@nestjs/jwt": "^10.2.0",
+    "@nestjs/mapped-types": "^2.1.1",
+    "@nestjs/platform-express": "^10.4.2",
+    "@prisma/client": "^5.20.0",
+    "bcryptjs": "^2.4.3",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "multer": "^1.4.5-lts.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.4.5",
+    "@nestjs/schematics": "^10.1.4",
+    "@nestjs/testing": "^10.4.2",
+    "@types/express": "^5.0.6",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/multer": "^2.1.0",
+    "@types/node": "^22.10.1",
+    "supertest": "^7.1.0",
+    "prisma": "^5.20.0",
+    "ts-node": "^10.9.2",
+    "vitest": "^2.1.8"
+  }
+}

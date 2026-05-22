@@ -1,0 +1,7 @@
+{
+  "extends": "../../packages/config-ts/nest.json",
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "include": ["src", "prisma"]
+}
